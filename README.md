@@ -3,6 +3,20 @@
 
 ---
 
+## Resumo Executivo
+
+Este projeto simula o fluxo de caixa de uma dívida indexada ao CDI com capitalização
+composta em dias úteis (Base 252), considerando pagamentos mensais com prioridade
+para juros acumulados.
+
+O modelo foi desenvolvido em Python e contempla:
+- Capitalização diária apenas em dias úteis
+- Calendário com feriados nacionais brasileiros
+- Regra de amortização com priorização de juros
+- Geração automatizada de relatório em Excel formatado
+
+---
+
 ## Estrutura do Projeto
 
 ```
@@ -53,7 +67,9 @@ sem sábados, domingos ou feriados nacionais. O calendário de feriados é obtid
 via biblioteca `holidays` (feriados nacionais de 2025 e 2026).
 
 A capitalização começa no **dia útil seguinte** à data de liberação (02/10/2025),
-pois 01/10/2025 é a data-base do saldo inicial.
+pois 01/10/2025 é a data-base do saldo inicial. Essa abordagem segue a prática
+de mercado, onde a incidência de juros ocorre apenas após a disponibilização
+efetiva do recurso.
 
 ### Task 1 — Capitalização Diária
 A cada dia útil, o Saldo Devedor é atualizado pelo fator composto:
@@ -86,7 +102,7 @@ No 1º dia útil de cada mês, a parcela de R$ 150.000,00 segue esta hierarquia:
 | Saldo Devedor Final   | R$ 2.142.094,24    |
 
 > A dívida não é integralmente quitada em 12 meses com a parcela de R$ 150.000,00,
-> pois o juro mensal médio (~R$ 39.000–R$ 49.000) deixa uma amortização efetiva
+> pois o juro mensal médio (Entre R$ 39.000 e R$ 49.000) deixa uma amortização efetiva
 > de apenas ~R$ 100.000–R$ 117.000 por período.
 
 ---
