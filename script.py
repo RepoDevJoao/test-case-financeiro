@@ -3,6 +3,7 @@ Case Técnico: Modelagem Financeira
 Gestão de Passivos e Projeção de Fluxo de Caixa (CDI)
 """
 
+# IMPORTAÇÕES
 import holidays
 import pandas as pd
 from datetime import date, timedelta
@@ -25,7 +26,7 @@ def eh_dia_util(d: date) -> bool:
     """Dia útil = não é fim de semana e não é feriado nacional brasileiro."""
     return d.weekday() < 5 and d not in holidays.Brazil(years=d.year)
 
-
+# Função para encontrar o 1º dia útil de um mês, avançando se necessário
 def primeiro_dia_util_do_mes(ano: int, mes: int) -> date:
     """Retorna o 1º dia útil de um mês, avançando se necessário."""
     d = date(ano, mes, 1)
@@ -33,7 +34,7 @@ def primeiro_dia_util_do_mes(ano: int, mes: int) -> date:
         d += timedelta(days=1)
     return d
 
-
+# Gerar as datas de pagamento: 1º dia útil de cada mês subsequente ao início
 def gerar_datas_pagamento(data_inicio: date, n_meses: int) -> list[date]:
     """Gera as n datas de pagamento (1º dia útil de cada mês subsequente)."""
     datas, mes, ano = [], data_inicio.month + 1, data_inicio.year
@@ -45,7 +46,7 @@ def gerar_datas_pagamento(data_inicio: date, n_meses: int) -> list[date]:
     return datas
 
 
-# 3. SIMULAÇÃO
+# 3. SIMULAÇÃO DO FLUXO DE CAIXA DA DÍVIDA
 def simular() -> list[dict]:
     """
     Simulação diária do fluxo de caixa da dívida.
@@ -63,6 +64,7 @@ def simular() -> list[dict]:
     datas_pagamento = gerar_datas_pagamento(DATA_INICIO, MESES)
     set_pagamentos  = set(datas_pagamento)
 
+    # Variáveis
     saldo_devedor    = PRINCIPAL
     juros_acumulados = 0.0
     relatorio        = []
@@ -71,22 +73,24 @@ def simular() -> list[dict]:
     data_atual = DATA_INICIO + timedelta(days=1)
 
     while data_atual <= datas_pagamento[-1]:
+        # Se não for dia útil, pula para o próximo dia
         if not eh_dia_util(data_atual):
             data_atual += timedelta(days=1)
             continue
 
-        # Task 1: atualiza o saldo e acumula o juro do dia
+        # Task 1: capitaliza o saldo devedor e acumula os juros do dia
         sd_anterior      = saldo_devedor
         saldo_devedor    = saldo_devedor * FATOR_DIARIO
         juros_acumulados += saldo_devedor - sd_anterior
 
-        # Task 2: evento de pagamento no 1º dia útil do mês
+        # Task 2: se for dia de pagamento, o 1° dia útil do mês, processa a parcela
         if data_atual in set_pagamentos:
             if saldo_devedor <= PARCELA:
-                # Último mês: encerra a dívida pelo saldo remanescente
+                # Último pagamento: se o saldo devedor for menor que a parcela, paga o que resta e quita a dívida
                 amortizacao   = saldo_devedor - juros_acumulados
                 parcela_paga  = saldo_devedor
                 saldo_devedor = 0.0
+            # Se os juros acumulados forem maiores que a parcela, o saldo devedor aumenta (juros não pagos)
             else:
                 amortizacao   = PARCELA - juros_acumulados   # pode ser negativa
                 parcela_paga  = PARCELA
@@ -98,7 +102,7 @@ def simular() -> list[dict]:
                 "Amortização do Principal (R$)": round(amortizacao, 2),
                 "Parcela (R$)":                 round(parcela_paga, 2),
                 "Saldo Devedor (R$)":           round(saldo_devedor, 2),
-            })
+            }) # Arredonda para 2 casas decimais, como é padrão financeiro
 
             juros_acumulados = 0.0
 
@@ -110,7 +114,7 @@ def simular() -> list[dict]:
     return relatorio
 
 
-# 4. EXPORTAÇÃO PARA XLSX
+# 4. EXPORTAÇÃO PARA XLSX COM FORMATAÇÃO
 def exportar_xlsx(relatorio: list[dict], caminho: str = "relatorio_mensal.xlsx"):
     df = pd.DataFrame(relatorio)
 
@@ -170,7 +174,7 @@ def exportar_xlsx(relatorio: list[dict], caminho: str = "relatorio_mensal.xlsx")
     print(f"Relatório salvo em: {caminho}")
 
 
-# 5. EXECUÇÃO DO SCRIPT
+# 5. EXECUÇÃO DO SCRIPT E GERAÇÃO DO RELATÓRIO
 if __name__ == "__main__":
     relatorio = simular()
     df = pd.DataFrame(relatorio)
